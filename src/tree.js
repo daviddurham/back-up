@@ -3,10 +3,8 @@ var Tree = function(x, w) {
 	this.x = x;
 	this.y = 0;	
 	
-    this.img = images["a/back_tree.png"];
-
     // scale
-    this.sx = w / this.img.width;
+    this.sx = w / 64;
     this.sy = 720;
 
     // visible
@@ -19,7 +17,8 @@ Tree.prototype = {
 		
 		if (this.v) {
 		
-			ctx.drawImage(this.img, this.x * scale, this.y * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			ctx.fillStyle = "#3D81C2";
+			ctx.fillRect(this.x * scale, this.y * scale, this.sx * 64 * scale, this.sy * scale);
 		}
 	}
 }

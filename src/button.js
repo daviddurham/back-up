@@ -1,17 +1,18 @@
-﻿var Button = function(x, y, img) {
+﻿var Button = function(x, y, t) {
 
 	this.x = x || 0;
 	this.y = y || 0;
 	
-	this.img = img;
-	
-	this.w = this.h = 0;
+	this.w = 64;
+	this.h = 64;
 	
 	this.v = true;
 	this.isOver = false;
 	
-	this.text = '';
-	this.icon = null;
+	this.t = t || '';
+
+	// full circle
+	this.c = 2 * Math.PI;
 
 	target = this;
 }
@@ -20,7 +21,7 @@ Button.prototype = {
 	
 	click : function(mx, my) {
 		
-		if (mx > this.getX() && mx < this.getX() + this.getWidth() && my > this.getY() && my < this.getY() + this.getHeight()) {
+		if (mx > this.getX() && mx < this.getX() + this.getW() && my > this.getY() && my < this.getY() + this.getH()) {
 			
 			return true;
 		}
@@ -38,41 +39,30 @@ Button.prototype = {
 		return this.y * scale;
 	},
 	
-	getWidth : function() {
+	getW : function() {
 		
 		return this.w * scale;
 	},
 	
-	getHeight : function() {
+	getH : function() {
 		
 		return this.h * scale;
-	},
-
-	setText : function(text) {
-
-		this.text = text;
 	},
 	
 	update : function(mx, my) {
 		
 		if (!this.isOver) {
 			
-			this.w = this.img.width;
-			this.h = this.img.height;
-			
 			// rolling over?
-			if (mx > this.getX() && mx < this.getX() + this.getWidth() && my > this.getY() && my < this.getY() + this.getHeight()) {
+			if (mx > this.getX() && mx < this.getX() + this.getW() && my > this.getY() && my < this.getY() + this.getH()) {
 				
 				this.isOver = true;
 			}
 		}
 		else {
 			
-			this.w = this.img.width;
-			this.h = this.img.height;
-			
 			// rolled out?
-			if (mx < this.getX() || mx > this.getX() + this.getWidth() || my < this.getY() || my > this.getY() + this.getHeight()) {
+			if (mx < this.getX() || mx > this.getX() + this.getW() || my < this.getY() || my > this.getY() + this.getH()) {
 			
 				this.isOver = false;
 			}
@@ -89,9 +79,28 @@ Button.prototype = {
 				
 				oy = 4;
 			}
+			else {
 
-			ctx.drawImage(this.img, this.x * scale, (this.y + oy) * scale, this.img.width * scale, this.img.height * scale);
-			printText(this.x + (this.img.width * 0.5), (this.y + oy) + (this.img.height * 0.5) - 8, this.text, true);
+				// shadow
+				ctx.globalAlpha = 0.25;
+				ctx.beginPath();
+				ctx.arc((this.x + 32) * scale, (this.y + 36) * scale, 32 * scale, 0, this.c);
+				ctx.fillStyle = "#000000";
+				ctx.fill();
+				ctx.globalAlpha = 1;
+			}
+			
+			ctx.beginPath();
+			ctx.arc((this.x + 32) * scale, (this.y + 32 + oy) * scale, 32 * scale, 0, this.c);
+			ctx.fillStyle = "#FFFFFF";
+			ctx.fill();
+
+			ctx.beginPath();
+			ctx.arc((this.x + 32) * scale, (this.y + 32 + oy) * scale, 27 * scale, 0, this.c);
+			ctx.fillStyle = "#EA1C5A";
+			ctx.fill();
+
+			print(this.x + 26, (this.y + oy + 15), this.t, true, 1.2);
 		}
 	}
 }

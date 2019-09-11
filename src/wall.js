@@ -14,31 +14,26 @@ var Wall = function(shade) {
 	this.init(shade);
 	
 	this.isFront = true;
-    this.v = true;
+	this.v = true;
+	this.sv = false;
+
+	// randomize asset used
+	this.as = 1;
+	if (rnd() < 0.3) this.as = 0;
+
+	this.ft = im["a/w.png"];
+	this.sd = im["a/shade.png"];
 }
 
 Wall.prototype = {
 	
 	init : function(shade) {
 		
-		var asset = "w3";
-		
+		this.sv = false;
 		if (shade) {
 
-			asset = "ws";
+			this.sv = true;
 		}
-		else {
-	
-			var r = Math.random();
-			
-			if (r < 0.3) {
-				
-				asset = "w2"
-			}
-		}
-
-		this.ft = images["a/" + asset + ".png"];
-    	//this.bk = images['assets/wall_back.png'];
 	},
 	
 	getX : function() {
@@ -62,17 +57,15 @@ Wall.prototype = {
 		
 		if (this.v) {
 		
-			if (!this.isFront) {
+			if (this.isFront) {
 
+				ctx.drawImage(this.ft, 0, 100 * this.as, 100, 100, (this.x + this.ox) * scale, (this.y + this.oy) * scale, 100 * this.sx * scale * 0.48, 100 * this.sy * scale * 0.48);
 				
-				//ctx.drawImage(this.bk, (this.x + this.ox) * scale, (this.y + this.oy) * scale, this.bk.width * this.sx * scale, this.bk.height * this.sy * scale);
-				
-			}
-			else {
+				// shadow (for under platforms)
+				if (this.sv) {
 
-				//ctx.globalAlpha = 0.5;
-				ctx.drawImage(this.ft, (this.x + this.ox) * scale, (this.y + this.oy) * scale, this.ft.width * this.sx * scale * 0.48, this.ft.height * this.sy * scale * 0.48);
-				ctx.globalAlpha = 1;
+					ctx.drawImage(this.sd, (this.x + this.ox) * scale, (this.y + this.oy) * scale, this.sd.width * this.sx * scale * 0.48, this.sd.height * this.sy * scale * 0.48);
+				}
 			}
 		}
 	}

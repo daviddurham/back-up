@@ -4,17 +4,18 @@ var HUD = function() {
 	
 	// pause menu
 	this.isPaused = false;
-	this.btn = new Button(Constants.WIDTH - 74, 10, images["a/pause_out.png"]);
+	this.btn = new Button(Constants.W - 74, 10, "<");
 	
-	this.bar = images["a/bar.png"];
-	this.barBase = images["a/bar_base.png"];
-	this.barScale = 0;
+	// charge bar
+	this.bar = im["a/bar.png"];
+	this.bBs = im["a/bar_base.png"];
+	this.bS = 0;
 
-	this.showHelp = true;
+	this.help = true;
 	
-	if (!firstPlay1) {
+	if (!isFT) {
 		
-		this.showHelp = false;
+		this.help = false;
 	}
 
 	target = this;
@@ -31,32 +32,36 @@ HUD.prototype = {
 		
 		if (this.btn.click(mx, my)) {
 			
-			game.isRunning = false;
+			game.isRun = false;
+			game.music.stop();
 			quitGame();
 		}
 	},
 	
 	draw : function() {
 		
-		if (this.showHelp) {
+		if (this.help) {
 		
 			if (isTouch) {
 		
-				//printText(240, 400, "TAP AND HOLD TO JUMP", true, 0.6);
+				print(240, 315, "TOUCH SCREEN TO CHARGE", true, 0.8);
 			}
 			else {
 				
-				//printText(240, 400, "PRESS AND HOLD ANY KEY TO JUMP", true, 0.6);
+				print(240, 315, "HOLD ANY KEY TO CHARGE", true, 0.8);
 			}
+
+			print(240, 355, "THEN RELEASE TO JUMP", true, 0.8);
 		}
 		
 		this.btn.draw();
 		
-		printText(240, 64, "" + this.score, true, 1.5);
+		print(240, 64, "" + this.score, true, 1.5);
 
-
-		ctx.drawImage(this.bar, 26 * scale, (577 * scale) + (this.bar.height * (1 - this.barScale) * scale), (this.bar.width + 1) * scale, this.bar.height * this.barScale * scale);
-		ctx.drawImage(this.barBase, 20 * scale, 570 * scale, this.barBase.width * scale, this.barBase.height * scale);
+		ctx.fillStyle = "#FFFFFF";
+		ctx.fillRect(26 * scale, (577 * scale) + (114 * (1 - this.bS) * scale), 36 * scale, 114 * this.bS * scale);
+		
+		ctx.drawImage(this.bBs, 20 * scale, 570 * scale, this.bBs.width * scale, this.bBs.height * scale);
 	},
 	
 	update : function(mx, my) {

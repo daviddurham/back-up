@@ -3,7 +3,7 @@ var Beam = function(x, y, w, r) {
 	this.x = x;
     this.y = y;
 	
-    this.img = images["a/ray.png"];
+    this.img = im["a/ray.png"];
 
     // scale
     this.sx = w / this.img.width;

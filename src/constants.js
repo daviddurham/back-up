@@ -1,15 +1,12 @@
 Constants = {
 	
-	STATE_INIT: 0,
-	STATE_LOAD: 1,
-	STATE_MENU: 2,
-	STATE_GAME: 3,
+	S_INIT: 0,
+	S_LOAD: 1,
+	S_MENU: 2,
+	S_GAME: 3,
 	
-	WIDTH: 480,
-	HEIGHT: 720,
+	W: 480,
+	H: 720,
 	
-	FPS: 60,
-	
-	TO_DEG : 180 / Math.PI,		
-	TO_RAD : Math.PI / 180
+	FPS: 60
 };

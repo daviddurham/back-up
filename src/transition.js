@@ -2,8 +2,8 @@ var Transition = function() {
 	
 	this.v = false;
 	
-	// start at the bottom
-	this.position = Constants.HEIGHT;
+	// position - start at the bottom
+	this.p = Constants.H;
 	
 	this.speed = 60;
 	this.isTop = true;
@@ -15,7 +15,7 @@ Transition.prototype = {
 	
 	start : function() {
 		
-		this.position = Constants.HEIGHT;
+		this.p = Constants.H;
 		this.v = true;
 		this.isTop = true;
 	},
@@ -30,34 +30,27 @@ Transition.prototype = {
 		transFunc();
 	},
 	
-	draw : function() {
-		
-		if (this.v) {
-		
-			// clear between
-			var px = 0;
-			var py = 0;
-			if (this.position > 0) py = (this.position) * scale;
-			
-			ctx.clearRect(px, py, canvas.width, (this.position + Constants.HEIGHT) * scale);
-		}
-	},
-	
 	update : function() {
 		
 		if (this.v) {
+
+			this.p -= this.speed;
 			
-			this.position -= this.speed;
-			
-			if (this.position <= 0 && this.isTop) {
+			if (this.p <= 0 && this.isTop) {
 				
 				this.onHidden();
 				this.isTop = false;
 			}
-			else if (this.position <= (Constants.HEIGHT) * -1) {
+			else if (this.p <= (Constants.H) * -1) {
 				
 				this.onComplete();
 			}
+
+			// clear between
+			var px = 0, py = 0;
+			if (this.p > 0) py = (this.p) * scale;
+			
+			ctx.clearRect(px, py, cv.width, (this.p + Constants.H) * scale);
 		}
 	}
 }

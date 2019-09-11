@@ -1,7 +1,10 @@
-var Player = function() {
+var Player = function(px, py) {
 	
-	// position and size
-	this.x = this.y = 0;
+	// position
+	this.x = px;
+	this.y = py;
+
+	// size
 	this.w = this.h = 0;
 
 	// offset / anchor
@@ -10,7 +13,7 @@ var Player = function() {
 	// scale
 	this.sx = this.sy = 1;
 	
-	this.img = images["a/p.png"];
+	this.img = im["a/p2.png"];
 	
 	this.isAlive = true;
 	this.v = true;
@@ -18,16 +21,15 @@ var Player = function() {
 	// movement speed
 	this.dx = this.dy = 0;
 
-	this.animDir = 1;
+	// anim direction
+	this.aDir = 1;
 	this.hop = 0;
 	
-	// flag when jumping/falling
+	// when jumping
 	this.isJump = false;
 	
-	// flag when the player has been hit
+	// when falling
 	this.isFall = false;
-
-	this.isTunnel = false;
 	
 	// platform currently on
 	this.currPlatform = null;
@@ -36,11 +38,6 @@ var Player = function() {
 }
 
 Player.prototype = {
-	
-	init : function() {
-		
-		
-	},
 	
 	getX : function() {
 		
@@ -68,7 +65,13 @@ Player.prototype = {
 		
 		if (this.v) {
 			
-			ctx.drawImage(this.img, (this.x + this.ox) * scale, (this.y + this.oy + this.hop) * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			// draw the player in 2 halves
+			ctx.drawImage(this.img, (this.x + this.ox - (this.img.width * 0.5)) * scale, (this.y + this.oy + this.hop) * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			
+			// flip 2nd half
+			ctx.scale(-1, 1);
+			ctx.drawImage(this.img, (this.x + this.ox + (this.img.width * 0.5)) * -scale, (this.y + this.oy + this.hop) * scale, -this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
 		}
 	},
 
@@ -93,13 +96,13 @@ Player.prototype = {
 		this.dy = 0;
 
 		this.setScale(1.05, 0.9);
-		this.animDir = 1;
+		this.aDir = 1;
 		this.hop = 0;
 	},
 
-	walkAnim : function() {
+	walk : function() {
 			
-		if (this.animDir > 0) {
+		if (this.aDir > 0) {
 			
 			if (this.sy < 1.1) {
 				
@@ -112,7 +115,7 @@ Player.prototype = {
 				
 				this.sx = 0.95;
 				this.sy = 1.1;
-				this.animDir = -1;
+				this.aDir = -1;
 			}
 		}
 		else {
@@ -128,7 +131,7 @@ Player.prototype = {
 				
 				this.sx = 1.05;
 				this.sy = 0.9;
-				this.animDir = 1;
+				this.aDir = 1;
 
 				this.hop = 0;
 			}
@@ -142,7 +145,7 @@ Player.prototype = {
 		// 'walk' animation
 		if (!this.isJump) {
 			
-			this.walkAnim();
+			this.walk();
 		}
 	}
 }

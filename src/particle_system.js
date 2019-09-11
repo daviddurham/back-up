@@ -1,5 +1,5 @@
-﻿var ParticleSystem = function() {
-	
+﻿var ParticleSys = function() {
+
 	this.x = this.y = 0;
 	this.v = true;
 	
@@ -40,24 +40,41 @@
 	
 	// will complete / is complete
 	this.wc = this.ic = false;
+
+	// 'root'
+	this.rt = 0;
 }
 
-ParticleSystem.prototype = {
+ParticleSys.prototype = {
 	
-	init : function(asset, n, life, dx, dy) {
+	init : function(img, n, life, dx, dy, dxR, dyR, fX, fY, spW, spH, sc) {
 		
 		this.count = n;
 		this.ls = life;
 		
-		this.dx = dx;
-		this.dy = dy;
+		// base speed
+		this.dx = dx || 0;
+		this.dy = dy || 0;
+
+		// speed randomness
+		this.dxR = dxR || 0;
+		this.dyR = dyR || 0;
+
+		// forces
+		this.fX = fX || 0;
+		this.fY = fY || 0;
+
+		this.spW = spW || 0;
+		this.spH = spH || 0;		
 		
+		this.scaling = sc || 0;
+
 		// create all particles
 		var i = this.count;
 		while (i-- > 0) {
 			
 			// create particle and put in list
-			var p = new Particle(asset);
+			var p = new Particle(img);
 			this.p.push(p);
 		}
 	},
@@ -75,10 +92,7 @@ ParticleSystem.prototype = {
 		// do any frame offsetting
 		var i = this.fo;
 		
-		while (i-- > 0) {
-			
-			this.update();
-		}
+		while (i-- > 0)	this.update();
 	},
 	
 	stop : function() {
@@ -96,23 +110,22 @@ ParticleSystem.prototype = {
 		this.isPause = false;
 	},
 	
-	burst : function(num) {
+	burst : function(num, rt) {
 		
 		if (!this.paused) {
 			
 			var i = num;
 			
-			while (i-- > 0) {
-				
-				this.addParticle(this.randomSpeed(this.dx, this.dxR), this.randomSpeed(this.dy, this.dyR), this.randomLife(this.ls));
-			}
+			while (i-- > 0) this.add(this.rSpd(this.dx, this.dxR), this.rSpd(this.dy, this.dyR), this.rLf(this.ls));
 		}
+		
+		this.rt = rt || 0;
 		
 		this.wc = true;
 		this.ic = false;
 	},
 	
-	addParticle : function (dx, dy, life) {
+	add : function (dx, dy, life) {
 		
 			// find next free particle
 			var i = this.count;
@@ -121,11 +134,7 @@ ParticleSystem.prototype = {
 				var p = this.p[i];
 				
 				// unused particles are hidden
-				if (!p.v) {
-					
-					// break loop when free particle is found
-					break;
-				}
+				if (!p.v) break;
 			}
 			
 			// set start position
@@ -134,12 +143,12 @@ ParticleSystem.prototype = {
 			
 			if (this.spW != 0) {
 				
-				p.x += (Math.random() * this.spW) - (this.spW * 0.5);
+				p.x += (rnd() * this.spW) - (this.spW * 0.5);
 			}
 			
 			if (this.spH != 0) {
 				
-				p.y += (Math.random() * this.spH) - (this.spH * 0.5);
+				p.y += (rnd() * this.spH) - (this.spH * 0.5);
 			}
 			
 			p.setScale(1);
@@ -157,59 +166,30 @@ ParticleSystem.prototype = {
 			p.v = true;
 	},
 	
-	randomSpeed : function(d, r) {
+	rSpd : function(d, r) {
 		
 		// deviation can be positive or negative
-		var r = (((d + 1) * r) * Math.random()) - (((d + 1) * r) * 0.5);
+		var r = (((d + 1) * r) * rnd()) - (((d + 1) * r) * 0.5);
 		d += r;
 		
 		return d;
 	},
 	
-	randomLife : function(life) {
+	rLf : function(life) {
 		
 		// deviation may ONLY be negative (so we always know the maximum value)
-		var r = ((life + 1) * this.lr) * Math.random();
+		var r = ((life + 1) * this.lr) * rnd();
 		life -= r;
 		
 		return life;
 	},
 	
-	setForces : function(fx, fy) {
-		
-		this.fX = fx || 0;
-		this.fY = fy || 0;
-	},
-	
-	setScaling : function(scale) {
-		
-		this.scaling = scale;
-	},
-	
-	setlrness : function(random) {
+	setLfR : function(random) {
 		
 		this.lr = random;
 	},
-	
-	setSpeed : function(x, y) {
-		
-		this.dx = x;
-		this.dy = y;
-	},
-	
-	setSpeedRandomness : function(x, y) {
-		
-		this.dxR = x;
-		this.dyR = y;
-	},
-	
-	setSpawnArea : function(x, y) {
-		
-		this.spW = x;
-		this.spH = y;
-	},
 
-	setSpawnInterval : function(interval) {
+	setSpawnInt : function(interval) {
 		
 		this.spI = interval;
 	},
@@ -219,7 +199,7 @@ ParticleSystem.prototype = {
 		this.fo = offset;
 	},
 	
-	update : function() {
+	update : function(cy) {
 		
 		if (this.isPause) return;
 		
@@ -233,7 +213,7 @@ ParticleSystem.prototype = {
 			if (this.spN >= this.spI) {
 				
 				// add a particle every frame while the system is running
-				this.addParticle(this.randomSpeed(this.dx, this.dxR), this.randomSpeed(this.dy, this.dyR), this.randomLife(this.ls));
+				this.add(this.rSpd(this.dx, this.dxR), this.rSpd(this.dy, this.dyR), this.rLf(this.ls));
 				this.spN = 0;
 			}
 			
@@ -288,21 +268,12 @@ ParticleSystem.prototype = {
 				}
 			}
 			
-			if (complete) {
-				
-				this.ic = true;
-			}
+			if (complete) this.ic = true;
 		}
-	},
-	
-	draw : function () {
-		
-		var i = this.count;
-		
-		while (i-- > 0) {
-			
-			this.p[i].draw();
-		}
+
+		// draw
+		i = this.count;
+		while (i-- > 0)	this.p[i].draw();
 	},
 	
 	cleanUp : function() {
@@ -314,9 +285,6 @@ ParticleSystem.prototype = {
 		
 		var i = this.count;
 		
-		while (i-- > 0) {
-			
-			this.p[i].v = false;
-		}
+		while (i-- > 0) this.p[i].v = false;
 	}
 }

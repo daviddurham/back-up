@@ -1,29 +1,20 @@
 // all images used
-var sources = [	"a/pause_out.png",  
-				"a/sky.png",
-				"a/title.png",
-				"a/up.png",
-				"a/font.png",
-				"a/bar.png",
+var sources = [	"a/font.png",
 				"a/bar_base.png",
-			
-				"a/p.png",
+				"a/p2.png",
 				"a/leaf.png",
-				"a/platform.png",
-				"a/branch.png",
-				"a/w2.png",
-				"a/w3.png",
-				"a/ws.png",
-			
-				"a/back_tree.png",
+				"a/plat.png",
+				"a/spr2.png",
+				"a/w.png",
+				"a/shade.png",
 				"a/ray.png"];
 
 // storage for all images
-var images = {};
+var im = {};
 
 // counts for preloading
-var loadedImages = 0;
-var totalImages = 0;
+var ldImg = 0;
+var tImg = 0;
 
 // sections
 var preload;
@@ -34,8 +25,8 @@ var game;
 var trans;
 var transFunc;
 
-var canvas = null;
-var canvasRect = null;
+var cv = null;
+var cvRect = null;
 var ctx = null;
 
 var audioCtx = null;
@@ -47,7 +38,7 @@ var state;
 var scale;
 var ratio;
 
-var mousePosition;
+var mPos;
 var buttons = [];
 
 // ref to this scope level
@@ -55,37 +46,17 @@ var target = this;
 
 // run init on load
 window.onload = init;
-window.addEventListener('resize', resizeCanvas, false);
+window.addEventListener('resize', resize, false);
 
 var hiscore = 0;
-var firstPlay1 = true;
+
+// first time playeing
+var isFT = true;
+
+// mode
 var isTouch = false;
 
-
-/* FPS */
-
-var timeInterval = 0;
-var lastTime = 0;
-var frame = 0;
-var avgFps = 0;
-
-function getFPS() {
-
-	frame++;
-	
-	var date = new Date();
-	var thisTime = date.getTime();
-	
-	timeInterval = 1000 / (thisTime - lastTime);
-	lastTime = thisTime;
-
-	if (frame % 10 == 0) {
-		
-		avgFps = Math.round(timeInterval * 10) / 10;
-	}
-
-	return avgFps.toFixed(0);
-}
+var bg = null;
 
 
 /* Initialisation */
@@ -94,61 +65,63 @@ function init() {
 	
 	window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-	if (window.AudioContext) {
+	if (window.AudioContext) audioCtx = new window.AudioContext();
 
-		audioCtx = new window.AudioContext();
-	}
+	state = Constants.S_INIT;
+	
+	cv = document.getElementById('game');
+	cvRect = cv.getBoundingClientRect();
+	ctx = cv.getContext('2d');
+	ctx.webkitImageSmoothingEnabled = false;
+	
+	bg = ctx.createLinearGradient(0, 0, 0, 720);
+	bg.addColorStop(0, "#9BD8E7");
+	bg.addColorStop(1, "#1EADD9");
 
-	state = Constants.STATE_INIT;
+	//ratio = cv.height / cv.width;
+	ratio = cv.width / cv.height;
 	
-	canvas = document.getElementById('game');
-	canvasRect = canvas.getBoundingClientRect();
-	ctx = canvas.getContext('2d');
-	//ctx.webkitImageSmoothingEnabled = false;
-	
-	//ratio = canvas.height / canvas.width;
-	ratio = canvas.width / canvas.height;
-	
-	resizeCanvas();
+	resize();
 	
 	// create preloader with width and height
 	preload = new Preloader(this, 200, 32);
 	
 	// handle mouse behavior
-	mousePosition = {x:0, y:0};
-	canvas.addEventListener('mousemove', onMouseMove, false);
-	canvas.addEventListener('mousedown', onMouseDown, false);
-	canvas.addEventListener('mouseup', onMouseUp, false);
+	mPos = {x:0, y:0};
+	cv.addEventListener('mousemove', msMv, false);
+	cv.addEventListener('mousedown', msDn, false);
+	cv.addEventListener('mouseup', msUp, false);
 
-	canvas.addEventListener('touchmove', onTouchMove, false);
-	canvas.addEventListener('touchstart', onTouchDown, false);
-	canvas.addEventListener('touchend', onTouchUp, false);
+	cv.addEventListener('touchmove', tMv, false);
+	cv.addEventListener('touchstart', tDn, false);
+	cv.addEventListener('touchend', tUp, false);
 	
-	canvas.addEventListener('keydown', onKeyDown, false);
-	canvas.addEventListener('keyup', onKeyUp, false);
+	cv.addEventListener('keydown', onKeyDown, false);
+	cv.addEventListener('keyup', onKeyUp, false);
 	
 	// main update loop
 	setInterval(update, 1000 / Constants.FPS);
 }
 
-function resizeCanvas() {
+function resize() {
 
-	canvas.height = window.innerHeight;
-	canvas.width = canvas.height * ratio; 
+	cv.height = window.innerHeight;
+	cv.width = cv.height * ratio; 
 	
 	// set the scale (fixed ratio)
-	scale = canvas.width / Constants.WIDTH;
+	scale = cv.width / Constants.W;
 }
 
-function printText(px, py, text, center, s) {
+function print(px, py, text, center, s) {
 	
 	var i = -1;
 	var len = text.length;
-	var image = images["a/font.png"];
+	var image = im["a/font.png"];
 	
 	var size = s || 1;
 
 	var offset = 0;
+	
 	if (center) offset = (len * 24 * size) * 0.5;
 	
 	while(i++ < len) {
@@ -162,93 +135,81 @@ function printText(px, py, text, center, s) {
 
 function onKeyDown(event) {
 	
-	if (state == Constants.STATE_GAME) {
-		
-		var key = event.keyCode;
-		
-		//if (key == 88) {
-		
-			game.onMouseDown(1);
-		//}
-	}
+	if (state == Constants.S_GAME) game.msDn(1);
 }
 
 function onKeyUp(event) {
 	
-	if (state == Constants.STATE_GAME) {
+	if (state == Constants.S_GAME) game.msUp(1);
+	else if (state == Constants.S_MENU) menu.click(mPos.x, mPos.y);
+}
+
+
+/* Mouse Handling */
+
+function msMv(event) {
 	
-		var key = event.keyCode;
+	mPos = getmPos(cv, event);
+}
+
+function msDn(event) {
+	
+	if (state == Constants.S_GAME) game.msDn(1);
+}
+
+function msUp(event) {
+	
+	if (state == Constants.S_MENU) menu.click(mPos.x, mPos.y);
+	else if (state == Constants.S_GAME) game.msUp(1);
+}
+
+
+/* Touch Handling */
+
+function tMv(event) {
+	
+	event.preventDefault();
+	
+	mPos = tPos(cv, event);
+}
+
+function tDn(event) {
+	
+	event.preventDefault();
+	mPos = tPos(cv, event);
+	
+	if (state == Constants.S_GAME) {
 		
-		//if (key == 88) {
-			
-			game.onMouseUp(1);
-		//}
+		if (mPos.x < Constants.W * 0.5 * scale) game.msDn(1);
+		else game.msDn(2);
 	}
 }
 
-
-/* Mouse / Touch Handling */
-
-function onMouseMove(event) {
-	
-	mousePosition = getMousePosition(canvas, event);
-}
-
-function onMouseDown(event) {
-	
-	if (state == Constants.STATE_GAME) game.onMouseDown(1);
-}
-
-function onMouseUp(event) {
-	
-	if (state == Constants.STATE_MENU) menu.click(mousePosition.x, mousePosition.y);
-	else if (state == Constants.STATE_GAME) game.onMouseUp(1);
-}
-
-function onTouchMove(event) {
+function tUp(event) {
 	
 	event.preventDefault();
+	mPos = tPos(cv, event);
 	
-	mousePosition = getTouchPosition(canvas, event);
-}
-
-function onTouchDown(event) {
-	
-	event.preventDefault();
-	mousePosition = getTouchPosition(canvas, event);
-	
-	if (state == Constants.STATE_GAME) {
-		
-		if (mousePosition.x < Constants.WIDTH * 0.5 * scale) game.onMouseDown(1);
-		else game.onMouseDown(2);
-	}
-}
-
-function onTouchUp(event) {
-	
-	event.preventDefault();
-	mousePosition = getTouchPosition(canvas, event);
-	
-	if (state == Constants.STATE_MENU) {
+	if (state == Constants.S_MENU) {
 		
 		isTouch = true;
-		menu.click(mousePosition.x, mousePosition.y);
+		menu.click(mPos.x, mPos.y);
 	}
-	else if (state == Constants.STATE_GAME) {
+	else if (state == Constants.S_GAME) {
 	
-		if (mousePosition.x < Constants.WIDTH * 0.5 * scale) game.onMouseUp(1);
-		else game.onMouseUp(2);
+		if (mPos.x < Constants.W * 0.5 * scale) game.msUp(1);
+		else game.msUp(2);
 	}
 }
 
-function getTouchPosition(canvas, event) {
+function tPos(cv, event) {
 	
-	return { x: event.changedTouches[0].pageX - canvas.offsetLeft, y: event.changedTouches[0].pageY - canvas.offsetTop };
+	return { x: event.changedTouches[0].pageX - cv.offsetLeft, y: event.changedTouches[0].pageY - cv.offsetTop };
 }
 
-function getMousePosition(canvas, event) {
+function getmPos(cv, event) {
 	
-	return { x: event.pageX - canvas.offsetLeft, y: event.pageY - canvas.offsetTop };
+	return { x: event.pageX - cv.offsetLeft, y: event.pageY - cv.offsetTop };
 }
 
 
@@ -257,60 +218,61 @@ function getMousePosition(canvas, event) {
 function loadAllImages(src) {
 	
 	// count images
-	totalImages = src.length;
+	tImg = src.length;
 	
 	// load images
-	for (var s in src) {
-		
-		loadImage(src[s]);
-	}
+	for (var s in src) loadImage(src[s]);
 }
 
 function loadImage(src) {
 
-	images[src] = new Image();
-	images[src].onload = function() {
+	im[src] = new Image();
+	im[src].onload = function() {
 	
-		loadedImages += 1;
-		preload.update(loadedImages, totalImages);
+		ldImg += 1;
+		preload.update(ldImg, tImg);
 	}
 	
-	images[src].src = src;
+	im[src].src = src;
 }
 
 function startGame(players) {
 	
 	numPlayers = players;
-	transFunc = onTransitionGame;
+	transFunc = onTransGame;
 	trans.start();
 }
 
 function quitGame() {
 	
-	transFunc = onTransitionQuit;
+	transFunc = onTransQuit;
 	trans.start();
 }
 
-function onTransitionQuit() {
+function onTransQuit() {
 
 	game.cleanUp();
 	game = null;
 	
-	menu = new Menu();
-	menu.init();			
+	menu = new Menu();			
 	
-	state = Constants.STATE_MENU;
+	state = Constants.S_MENU;
 }
 
-function onTransitionGame() {
+function onTransGame() {
 	
 	game = new Game();
 	game.init();
 	
-	state = Constants.STATE_GAME;
+	state = Constants.S_GAME;
 	
 	menu.cleanUp();
 	menu = null;
+}
+
+function rnd() {
+
+	return Math.random();
 }
 
 /* Main Loop */
@@ -318,55 +280,44 @@ function onTransitionGame() {
 function update() {
 	
 	// clear the screen
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.clearRect(0, 0, cv.width, cv.height);
 	
 	switch (state) {
 		
-		case Constants.STATE_INIT:
+		case Constants.S_INIT:
 			
 			if (preload.isReady) {
 				
 				loadAllImages(sources);
-				state = Constants.STATE_LOAD;
+				state = Constants.S_LOAD;
 			}
 			break;
 		
-		case Constants.STATE_LOAD:
+		case Constants.S_LOAD:
 			
 			preload.draw();
 			
 			if (preload.isComplete) {
 				
 				menu = new Menu();
-				menu.init();
 				
 				trans = new Transition();
-				state = Constants.STATE_MENU;
+				state = Constants.S_MENU;
 			}
 			break;
 			
-		case Constants.STATE_MENU:
+		case Constants.S_MENU:
 			
-			menu.update(mousePosition.x, mousePosition.y);
-			menu.draw();
+			menu.update(mPos.x, mPos.y);
 			break;
 		
-		case Constants.STATE_GAME:			
+		case Constants.S_GAME:			
 			
-			game.update(mousePosition.x, mousePosition.y);
-			game.draw();
+			game.update(mPos.x, mPos.y);
 			break;
 	}
 	
-	if (trans) {
+	if (trans) trans.update();
 	
-		trans.update();
-		trans.draw();
-	}
-	
-	if (state > Constants.STATE_LOAD) {
-		
-		printText(240, 16, "BEST " + hiscore, true);
-		//printText(10, 10, getFPS() + " FPS", false);
-	}
+	if (state > Constants.S_LOAD) print(235, 16, "BEST " + hiscore, true);
 }
