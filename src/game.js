@@ -86,7 +86,6 @@ Game.prototype = {
 				this.walls.push(w);
 				
 				w.a = a;
-				w.d = this.cy + Math.cos(a) * this.rad;
 				w.x = this.cx + Math.sin(a) * (this.rad);
 				w.y = this.cy - (48 * i);
 				w.by = 48 * (i + 2);
@@ -99,7 +98,6 @@ Game.prototype = {
 					
 					p.a = a;	
 					p.setScale(1 + (rnd() * 0.5));
-					//p.d = (this.cy + Math.cos(a) * (this.rad + 64));
 					p.x = this.cx + Math.sin(a) * (this.rad + 64);
 					p.y = this.cy - (48 * (i + 1));
 					p.by = (48 * (i + 1));
@@ -109,8 +107,10 @@ Game.prototype = {
 			}
 	
 			// create the player at a set position
-			this.p = new Player(240, 530);
+			this.p = new Player(240, 750);
 			this.p.setScale(1, 1);
+
+			this.p.jump(1);
 
 			// harcoded rows to start
 			if (i == 10 || i == 7 || i == 4 || i == 1) this.setRow(48 * (i + 1));
@@ -254,10 +254,8 @@ Game.prototype = {
 			if ((Math.cos(w.a) * (this.rad)) < 0) w.isFront = true;
 			else w.isFront = false;
 		}
-	},
 
-	drawLevel : function() {
-			
+		// draw level			
 		var i, sprites = [];
 
 		for (i = 0; i < this.lev.length; i++) sprites.push(this.lev[i]);
@@ -421,7 +419,7 @@ Game.prototype = {
 							}
 
 							// gameover when off the bottom of the screen
-							if (this.p.y > Constants.H) {
+							if (this.p.y > Constants.H + 20) {
 
 								if (this.p.isAlive) {
 								
@@ -531,10 +529,9 @@ Game.prototype = {
 			}
 
 			this.updateLevel();
-			this.drawLevel();
 			
+			// update
 			this.p.update();
-			this.p.draw();
 
 			// particles
 			this.lf.x = this.p.x;

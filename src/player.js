@@ -60,20 +60,6 @@ Player.prototype = {
 		this.ox = this.w * -0.5;
 		this.oy = this.h * -1;
 	},
-	
-	draw : function() {
-		
-		if (this.v) {
-			
-			// draw the player in 2 halves
-			ctx.drawImage(this.img, (this.x + this.ox - (this.img.width * 0.5)) * scale, (this.y + this.oy + this.hop) * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
-			
-			// flip 2nd half
-			ctx.scale(-1, 1);
-			ctx.drawImage(this.img, (this.x + this.ox + (this.img.width * 0.5)) * -scale, (this.y + this.oy + this.hop) * scale, -this.img.width * this.sx * scale, this.img.height * this.sy * scale);
-			ctx.setTransform(1, 0, 0, 1, 0, 0);
-		}
-	},
 
 	jump : function(pow) {
 			
@@ -143,9 +129,17 @@ Player.prototype = {
 	update : function(mx, my) {
 		
 		// 'walk' animation
-		if (!this.isJump) {
+		if (!this.isJump) this.walk();
+
+		if (this.v) {
 			
-			this.walk();
+			// draw the player in 2 halves
+			ctx.drawImage(this.img, (this.x + this.ox - (this.img.width * 0.5)) * scale, (this.y + this.oy + this.hop) * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			
+			// flip 2nd half
+			ctx.scale(-1, 1);
+			ctx.drawImage(this.img, (this.x + this.ox + (this.img.width * 0.5)) * -scale, (this.y + this.oy + this.hop) * scale, -this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
 		}
 	}
 }

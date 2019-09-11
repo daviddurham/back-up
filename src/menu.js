@@ -21,6 +21,9 @@ var Menu = function() {
 
 	this.buildLevel();
 
+	this.p = new Player(240, 650);
+	this.p.setScale(1, 1);
+
 	var a = Math.PI / 8;
 	this.trees = [new Tree(50, 32), new Tree(400, 48)];
 	this.beams = [new Beam(100, -100, 60, a), new Beam(120, -120, 100, a), new Beam(200, -100, 60, a)];
@@ -204,6 +207,11 @@ Menu.prototype = {
 		
 		this.drawLevel();
 
+		ctx.fillStyle = "#3FAB92";
+		ctx.fillRect(0, (650 * scale), 480 * scale, 70 * scale);
+
+		this.p.update();
+
 		// light rays
 		for (i = 0; i < this.beams.length; i++) this.beams[i].draw();
 		
@@ -215,8 +223,8 @@ Menu.prototype = {
 
 		if (this.flashOn) {
 		
-			if (isTouch) print(235, 520, "TAP TO PLAY", true, 0.85);
-			else print(235, 520, "PRESS A KEY", true, 0.85);
+			if (isTouch) print(235, 500, "TAP TO PLAY", true, 1);
+			else print(235, 500, "PRESS ANY KEY", true, 1);
 		}
 	},
 	
