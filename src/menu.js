@@ -240,10 +240,11 @@ Menu.prototype = {
 		for (i = 0; i < this.beams.length; i++) this.beams[i].draw();
 		
 		// title / logo made of text
-		print(235, 200, "BACK", true, 1.3);
-		print(230, 240, "UP ", true, 1.6);
-		print(272, 242, ":", true, 1.3);
-		print(273, 281, ";", true, 1.3);
+		print(235, 163, "GET", true, 1.8);
+		print(235, 220, "BACK", true, 1.3);
+		print(230, 260, "UP ", true, 1.6);
+		print(272, 262, ":", true, 1.3);
+		print(273, 301, ";", true, 1.3);
 
 		if (this.flashOn) {
 		
