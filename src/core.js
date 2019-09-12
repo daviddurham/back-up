@@ -122,11 +122,11 @@ function print(px, py, text, center, s) {
 
 	var offset = 0;
 	
-	if (center) offset = (len * 24 * size) * 0.5;
+	if (center) offset = (len * 22 * size) * 0.5;
 	
 	while(i++ < len) {
 		
-		ctx.drawImage(image, ((text.charCodeAt(i) - 32) % 10) * 32, (Math.floor((text.charCodeAt(i) - 32) / 10) - 1) * 32, 32, 32, ((px - offset) * scale) + (i * 24 * scale * size), py * scale, 32 * size * scale, 32 * size * scale);
+		ctx.drawImage(image, ((text.charCodeAt(i) - 32) % 10) * 32, (Math.floor((text.charCodeAt(i) - 32) / 10) - 1) * 32, 32, 32, ((px - offset) * scale) + (i * 22 * scale * size), py * scale, 32 * size * scale, 32 * size * scale);
 	}
 }
 

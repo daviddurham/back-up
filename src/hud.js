@@ -2,8 +2,7 @@ var HUD = function() {
 	
 	this.score = 0;
 	
-	// pause menu
-	this.isPaused = false;
+	// quit button
 	this.btn = new Button(Constants.W - 74, 10, "<");
 	
 	// charge bar
@@ -32,7 +31,6 @@ HUD.prototype = {
 		
 		if (this.btn.click(mx, my)) {
 			
-			game.isRun = false;
 			game.music.stop();
 			quitGame();
 		}
@@ -42,16 +40,10 @@ HUD.prototype = {
 		
 		if (this.help) {
 		
-			if (isTouch) {
-		
-				print(240, 315, "TOUCH SCREEN TO CHARGE", true, 0.8);
-			}
-			else {
-				
-				print(240, 315, "HOLD ANY KEY TO CHARGE", true, 0.8);
-			}
+			if (isTouch) print(240, 315, "TOUCH SCREEN TO CHARGE", true, 0.8);
+			else print(240, 315, "HOLD ANY KEY TO CHARGE", true, 0.8);
 
-			print(240, 355, "THEN RELEASE TO JUMP", true, 0.8);
+			print(240, 350, "THEN RELEASE TO JUMP", true, 0.8);
 		}
 		
 		this.btn.draw();

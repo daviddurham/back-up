@@ -3,10 +3,12 @@
 	this.x = this.y = 0;
 	this.v = true;
 	
-	this.isRun = this.isPause = false;
+	this.isRun = false;
 	
 	this.p = [];
-	this.count = 0;
+	
+	// number of particles
+	this.num = 0;
 	
 	// life span and life randomness
 	this.ls = this.lr = 0;
@@ -49,7 +51,7 @@ ParticleSys.prototype = {
 	
 	init : function(img, n, life, dx, dy, dxR, dyR, fX, fY, spW, spH, sc) {
 		
-		this.count = n;
+		this.num = n;
 		this.ls = life;
 		
 		// base speed
@@ -69,14 +71,9 @@ ParticleSys.prototype = {
 		
 		this.scaling = sc || 0;
 
-		// create all particles
-		var i = this.count;
-		while (i-- > 0) {
-			
-			// create particle and put in list
-			var p = new Particle(img);
-			this.p.push(p);
-		}
+		// create all particles and put in list
+		var i = this.num;
+		while (i-- > 0) this.p.push(new Particle(img));
 	},
 	
 	start : function(d) {
@@ -100,24 +97,10 @@ ParticleSys.prototype = {
 		this.isRun = false;
 	},
 	
-	pause : function() {
-		
-		this.isPause = true;
-	}, 
-	
-	resume : function() {
-		
-		this.isPause = false;
-	},
-	
 	burst : function(num, rt) {
 		
-		if (!this.paused) {
-			
-			var i = num;
-			
-			while (i-- > 0) this.add(this.rSpd(this.dx, this.dxR), this.rSpd(this.dy, this.dyR), this.rLf(this.ls));
-		}
+		var i = num;
+		while (i-- > 0) this.add(this.rSpd(this.dx, this.dxR), this.rSpd(this.dy, this.dyR), this.rLf(this.ls));
 		
 		this.rt = rt || 0;
 		
@@ -128,7 +111,7 @@ ParticleSys.prototype = {
 	add : function (dx, dy, life) {
 		
 			// find next free particle
-			var i = this.count;
+			var i = this.num;
 			while (i-- > 0) {
 				
 				var p = this.p[i];
@@ -141,15 +124,9 @@ ParticleSys.prototype = {
 			p.x = this.x;
 			p.y = this.y;
 			
-			if (this.spW != 0) {
-				
-				p.x += (rnd() * this.spW) - (this.spW * 0.5);
-			}
-			
-			if (this.spH != 0) {
-				
-				p.y += (rnd() * this.spH) - (this.spH * 0.5);
-			}
+			// spawn area
+			if (this.spW != 0) p.x += (rnd() * this.spW) - (this.spW * 0.5);
+			if (this.spH != 0) p.y += (rnd() * this.spH) - (this.spH * 0.5);
 			
 			p.setScale(1);
 			
@@ -194,21 +171,14 @@ ParticleSys.prototype = {
 		this.spI = interval;
 	},
 	
-	setFrameOffset : function(offset) {
-		
-		this.fo = offset;
-	},
-	
-	update : function(cy) {
-		
-		if (this.isPause) return;
+	update : function(ex, ey) {
 		
 		if (this.dur > 0) {
 		
 			if (--this.dur == 0) this.stop();
 		}
 		
-		if (this.isRun && !this.isPause) {
+		if (this.isRun) {
 			
 			if (this.spN >= this.spI) {
 				
@@ -220,7 +190,7 @@ ParticleSys.prototype = {
 			this.spN++;
 		}
 		
-		var i = this.count;
+		var i = this.num;
 		
 		while (i-- > 0) {
 			
@@ -239,12 +209,19 @@ ParticleSys.prototype = {
 				else {
 					
 					// is there any gravity/forces
-					p.dy += this.fY;
-					p.dx += this.fX;
+					if (p.dy < 8) {
+
+						p.dy += this.fY;
+					}
 					
+					p.dx += this.fX;
+
 					// update position
 					p.x += p.dx;						
 					p.y += p.dy;
+
+					p.x += ex;
+					p.y += ey;
 					
 					// update size
 					p.setScale(p.scale * p.scaling);
@@ -256,7 +233,7 @@ ParticleSys.prototype = {
 		if (this.wc && !this.ic) {
 			
 			var complete = true;
-			i = this.count;
+			i = this.num;
 			
 			while (i-- > 0) {
 				
@@ -272,7 +249,7 @@ ParticleSys.prototype = {
 		}
 
 		// draw
-		i = this.count;
+		i = this.num;
 		while (i-- > 0)	this.p[i].draw();
 	},
 	
@@ -283,7 +260,7 @@ ParticleSys.prototype = {
 	
 	reset : function() {
 		
-		var i = this.count;
+		var i = this.num;
 		
 		while (i-- > 0) this.p[i].v = false;
 	}

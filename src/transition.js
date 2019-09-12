@@ -1,6 +1,7 @@
 var Transition = function() {
 	
 	this.v = false;
+	this.w = false;
 	
 	// position - start at the bottom
 	this.p = Constants.H;
@@ -17,6 +18,7 @@ Transition.prototype = {
 		
 		this.p = Constants.H;
 		this.v = true;
+		this.w = false;
 		this.isTop = true;
 	},
 	
@@ -27,24 +29,30 @@ Transition.prototype = {
 	
 	onHidden : function() {
 		
-		transFunc();
+		this.w = true;
+		var scope = this;
+
+		setTimeout(function() {scope.w = false; transFunc();}, 100);
 	},
 	
 	update : function() {
 		
 		if (this.v) {
 
-			this.p -= this.speed;
+			if (!this.w) {
 			
-			if (this.p <= 0 && this.isTop) {
+				this.p -= this.speed;
 				
-				this.onHidden();
-				this.isTop = false;
-			}
-			else if (this.p <= (Constants.H) * -1) {
-				
-				this.onComplete();
-			}
+				if (this.p <= 0 && this.isTop) {
+					
+					this.onHidden();
+					this.isTop = false;
+				}
+				else if (this.p <= (Constants.H) * -1) {
+					
+					this.onComplete();
+				}
+			}	
 
 			// clear between
 			var px = 0, py = 0;

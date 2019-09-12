@@ -134,11 +134,11 @@ Player.prototype = {
 		if (this.v) {
 			
 			// draw the player in 2 halves
-			ctx.drawImage(this.img, (this.x + this.ox - (this.img.width * 0.5)) * scale, (this.y + this.oy + this.hop) * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			ctx.drawImage(this.img, (this.x + this.ox - (this.img.width * 0.5 * this.sx)) * scale, (this.y + this.oy + this.hop) * scale, this.img.width * this.sx * scale, this.img.height * this.sy * scale);
 			
 			// flip 2nd half
 			ctx.scale(-1, 1);
-			ctx.drawImage(this.img, (this.x + this.ox + (this.img.width * 0.5)) * -scale, (this.y + this.oy + this.hop) * scale, -this.img.width * this.sx * scale, this.img.height * this.sy * scale);
+			ctx.drawImage(this.img, (this.x + this.ox + (this.img.width * 0.5 * this.sx)) * -scale, (this.y + this.oy + this.hop) * scale, -this.img.width * this.sx * scale, this.img.height * this.sy * scale);
 			ctx.setTransform(1, 0, 0, 1, 0, 0);
 		}
 	}

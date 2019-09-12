@@ -21,8 +21,9 @@ var Menu = function() {
 
 	this.buildLevel();
 
-	this.p = new Player(240, 650);
+	this.p = new Player(240, /*650*/0);
 	this.p.setScale(1, 1);
+	this.p.jump(0);
 
 	var a = Math.PI / 8;
 	this.trees = [new Tree(50, 32), new Tree(400, 48)];
@@ -30,7 +31,8 @@ var Menu = function() {
 
 	target = this;
 
-	//this.int = setInterval(function(){self.flash();}, 800);
+	// flash CTA
+	this.int = null;
 	this.flashOn = true;
 }
 
@@ -54,8 +56,8 @@ Menu.prototype = {
 			}
 		}
 
-		//clearInterval(this.flash);
-		//this.flash = null;
+		clearInterval(this.int);
+		this.int = null;
 
 		startGame();
 	},
@@ -135,6 +137,9 @@ Menu.prototype = {
 			if ((Math.cos(w.a) * (this.rad)) < 0) w.isFront = true;
 			else w.isFront = false;
 		}
+
+		var u = this;
+		this.int = setInterval(function(){u.flash();}, 800);
 	},
 
 	fillRow : function(row, fill) {
@@ -210,16 +215,35 @@ Menu.prototype = {
 		ctx.fillStyle = "#3FAB92";
 		ctx.fillRect(0, (650 * scale), 480 * scale, 70 * scale);
 
+
+		// player egg
+		var pBase = this.p.y;
+
+		if (this.p.isJump) {
+
+			this.p.y += this.p.dy;
+			this.p.dy += 0.5;
+				
+			// cap falling speed
+			if (this.p.dy > 16) this.p.dy = 16;
+
+			if (this.p.y > 650) {
+
+				this.p.land();
+			}
+		}
+
+
 		this.p.update();
 
 		// light rays
 		for (i = 0; i < this.beams.length; i++) this.beams[i].draw();
 		
 		// title / logo made of text
-		print(235, 200, "BACK", true, 1.1);
-		print(230, 240, "UP ", true, 1.3);
-		print(268, 237, ":", true, 1.3);
-		print(269, 276, ";", true, 1.3);
+		print(235, 200, "BACK", true, 1.3);
+		print(230, 240, "UP ", true, 1.6);
+		print(272, 242, ":", true, 1.3);
+		print(273, 281, ";", true, 1.3);
 
 		if (this.flashOn) {
 		

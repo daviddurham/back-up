@@ -1,7 +1,5 @@
 var Game = function() {
 
-	this.isRun = true;
-
 	this.isCharge = false;
 	this.pow = 0;
 
@@ -22,19 +20,21 @@ var Game = function() {
 	// tower elements
 	this.lev = [], this.walls = [], this.plats = [];
 	
-	this.layouts = [["1110011100111100",
+	this.sets = [["1110011100111100",
 					 "1100111001110011",
 					 "1001110011111001",
 					 "1111001111001111",
-					 "1100111111001100"],
-					
+					 "1100111111001100"]];
+					 
+					/*
 					["1100011100111100",
 					 "1100111001100011",
 					 "1001110001111001",
 					 "1110001110001111",
 					 "1100011111001100"]];
+					 */
 	
-	this.nextLayout = 0;
+	this.nxSet = 0;
 	this.currLev = 0;
 
 	// player speed
@@ -47,6 +47,8 @@ var Game = function() {
 
 	this.hud = new HUD();
 	this.lf = new ParticleSys();
+
+	this.lf2 = new ParticleSys();
 
 	this.music = new Music();
 	
@@ -62,6 +64,11 @@ Game.prototype = {
 
 		// leaves
 		this.lf.init(im["a/leaf.png"], 15, 100, 0, -2, 2, 2, 0, 0.2, 50, 0, 0.98);
+
+		this.lf2.init(im["a/leaf.png"], 20, 500, 0, 0, 2, 2, 0, 0.1, 720, 0, 0.995);
+		this.lf2.x = 240;
+		this.lf2.setSpawnInt(50);
+		this.lf2.start();
 
 		var i, map = [];
 
@@ -118,24 +125,6 @@ Game.prototype = {
 		}
 	},
 	
-	pausePressed : function() {
-	
-		if (this.isRun) this.pause();
-		else this.resume();
-	},
-	
-	pause : function() {
-	
-		//this.hud.pause();
-		this.isRun = false;
-	},
-	
-	resume : function() {
-	
-		//this.hud.resume();
-		this.isRun = true;
-	},
-	
 	onKeyDown : function(key) {
 		
 		if (key == 1) this.msDn();
@@ -147,38 +136,33 @@ Game.prototype = {
 	},
 	
 	msDn : function(player) {
+	
+		// check buttons first
+		if (this.hud.btn.isOver) return;
 		
-		if (this.isRun) {
-			
-			// check buttons first
-			if (this.hud.btn.isOver) return;
-			
-			// start charge
-			if (this.p.isAlive) this.isCharge = true;
-		}
+		// start charge
+		if (this.p.isAlive) this.isCharge = true;
 	},
 	
 	msUp : function(player) {
+			
+		// check buttons first
+		if (this.hud.btn.isOver) {
+			
+			this.hud.click(mPos.x, mPos.y);
+			return;
+		}
 		
-		if (this.isRun) {
+		if (this.p.isAlive) {
 			
-			// check buttons first
-			if (this.hud.btn.isOver) {
-				
-				this.hud.click(mPos.x, mPos.y);
-				return;
-			}
-			
-			if (this.p.isAlive) {
-				
-				this.isCharge = false;
-				this.p.jump(this.pow);
-				this.pow = 0;
+			this.isCharge = false;
+			this.p.jump(this.pow);
+			this.music.jump();
+			this.pow = 0;
 
-				this.hud.bS = 0;
-				this.hud.help = false;
-				isFT = false;
-			}
+			this.hud.bS = 0;
+			this.hud.help = false;
+			isFT = false;
 		}
 	},
 
@@ -190,7 +174,7 @@ Game.prototype = {
 
 	setRow : function(row, blank) {
 
-		var layout = this.layouts[this.currLev][this.nextLayout].split(''),	p = 0;
+		var set = this.sets[this.currLev][this.nxSet].split(''),	p = 0;
 		
 		for (var j = 0; j < this.lev.length; j++) {
 
@@ -201,7 +185,7 @@ Game.prototype = {
 			
 				lv.isUsed = false;
 
-				if (parseInt(layout[p]) == 1 && !blank) {
+				if (parseInt(set[p]) == 1 && !blank) {
 
 					lv.isUsed = true;
 					lv.setScale(1 + (rnd() * 0.5));
@@ -216,8 +200,8 @@ Game.prototype = {
 
 		if (!blank) {
 		
-			this.nextLayout++;
-			if (this.nextLayout > 4) this.nextLayout = 0;
+			this.nxSet++;
+			if (this.nxSet > 4) this.nxSet = 0;
 		}
 	},
 
@@ -277,13 +261,9 @@ Game.prototype = {
 			pBase = this.p.y + this.p.h;
 		
 		// check if falling
-		if (!this.colPtPlat(pMid, pBase + 1, p) || !p.isUsed || p.isOff) {
-			
-			return true;
-		}
+		if (!this.colPtPlat(pMid, pBase + 1, p) || !p.isUsed || p.isOff) return true;
 		
 		this.p.currPlatform = p;
-
 		return false;
 	},
 	
@@ -314,7 +294,7 @@ Game.prototype = {
 		ctx.fillStyle = bg;
 		ctx.fillRect(0, 0, 480 * scale, 720 * scale);
 
-		var i;
+		var i, cy1 = this.cy;
 
 		for (i = 0; i < this.trees.length; i++) {
 
@@ -325,241 +305,233 @@ Game.prototype = {
 		}
 
 		this.hud.update(mx, my);
+			
+		if (this.isCharge) {
+
+			this.pow += 0.02
+
+			if (this.pow > 1) this.pow = 0;
+
+			this.hud.bS = this.pow;
+		}
 		
-		//if (this.isRun) {
-			
-			if (this.isCharge) {
-
-				this.pow += 0.02
-
-				if (this.pow > 1) {
-
-					this.pow = 0;
-				}
-
-				this.hud.bS = this.pow;
+		if (this.p.isJump) {
+		
+			// going up and more than halfway up the screen - move the level 
+			if (this.p.dy < 0 && this.p.y <= (Constants.H / 2)) {
+				
+				this.cy -= this.p.dy;
+				this.co -=  this.p.dy;
 			}
+			// going down or lower than halfway up the screen - move the player
+			else {
+
+				this.p.y += this.p.dy;
+			}
+
+			this.p.dy += 0.5;
 			
-			if (this.p.isJump) {
+			// cap falling speed
+			if (this.p.dy > 16) this.p.dy = 16;
+		}
+
+		// update vertical position of level
+		for (i = 0; i < this.lev.length; i++) this.lev[i].y = this.lev[i].by + this.cy;			
+		for (i = 0; i < this.walls.length; i++) this.walls[i].y = this.walls[i].by + this.cy;
+
+		var pMid = this.p.x, pBase = this.p.y;
+		
+		if (this.p.isJump) {
 			
-				// going up and more than halfway up the screen - move the level 
-				if (this.p.dy < 0 && this.p.y <= (Constants.H / 2)) {
+			// landed on a platform?				
+			for (i = 0; i < this.plats.length; i++) {
+				
+				var pl = this.plats[i];
+
+				if (pl.v && !this.p.isFall && !pl.isOff && pl.isUsed) {
 					
-					this.cy -= this.p.dy;
-					this.co -=  this.p.dy;
-				}
-				// going down or lower than halfway up the screen - move the player
-				else {
-
-					this.p.y += this.p.dy;
-				}
-
-				this.p.dy += 0.5;
-				
-				// cap falling speed
-				if (this.p.dy > 16) this.p.dy = 16;
-			}
-
-			for (i = 0; i < this.lev.length; i++) {
-				
-				this.lev[i].y = this.lev[i].by + this.cy;
-			}
-			
-			for (i = 0; i < this.walls.length; i++) {
-				
-				this.walls[i].y = this.walls[i].by + this.cy;			
-			}
-
-			var pMid = this.p.x,
-				pBase = this.p.y;
-			
-			if (this.p.isJump) {
-				
-				// landed on a platform?				
-				for (i = 0; i < this.plats.length; i++) {
-					
-					var pl = this.plats[i];
-
-					if (pl.v && !this.p.isFall && !pl.isOff && pl.isUsed) {
+					// falling?
+					if (this.p.dy > 0) {
 						
-						// falling?
-						if (this.p.dy > 0) {
+						var pLeft = pl.x - (pl.w / 2), pRight = pl.x + (pl.w / 2);
+						
+						// player midpoint is within the platform dimensions horizontally?
+						if (pMid > pLeft && pMid < pRight) {
 							
-							var pLeft = pl.x - (pl.w / 2),
-								pRight = pl.x + (pl.w / 2);
-							
-							// player midpoint is within the platform dimensions horizontally?
-							if (pMid > pLeft && pMid < pRight) {
+							// vertically colliding
+							if (pBase > pl.y && pBase < pl.y + pl.h) {
 								
-								// vertically colliding
-								if (pBase > pl.y && pBase < pl.y + pl.h) {
-									
-									// was above the platform last update?
-									if (pBase - this.p.dy < pl.y) {
+								// was above the platform last update?
+								if (pBase - this.p.dy < pl.y) {
 
-										var diff = this.p.y - pl.y;
+									var diff = this.p.y - pl.y;
 
-										// going up and more than halfway up the screen - move the level 
-										if (this.p.dy < 0 && this.p.y <= (Constants.H / 2)) {
-											
-											this.cy += diff;
-											this.co += diff;
-										}
-										// going down or lower than halfway up the screen - move the player
-										else {
-
-											this.p.y -= diff;
-										}
-
-										this.p.land();
-										this.lf.burst(5, this.cy);
-										break;
+									// going up and more than halfway up the screen - move the level 
+									if (this.p.dy < 0 && this.p.y <= (Constants.H / 2)) {
+										
+										this.cy += diff;
+										this.co += diff;
 									}
+									// going down or lower than halfway up the screen - move the player
+									else {
+
+										this.p.y -= diff;
+									}
+
+									this.p.land();
+									this.lf.burst(5, this.cy);
+									this.music.land();
+									break;
 								}
 							}
+						}
 
-							// gameover when off the bottom of the screen
-							if (this.p.y > Constants.H + 20) {
+						// gameover when off the bottom of the screen
+						if (this.p.y > Constants.H + 20) {
 
-								if (this.p.isAlive) {
-								
-									this.p.isAlive = false;
-									this.music.stop();
-									quitGame();
-								}
+							if (this.p.isAlive) {
+							
+								this.p.isAlive = false;
+								this.music.stop();
+								quitGame();
 							}
 						}
 					}
 				}
+			}
+		}
+		else {
+			
+			// not already falling?
+			if (this.p.dy == 0) {
+					
+				// falling off a platform?
+				for (i = 0; i < this.plats.length; i++) {
+				
+					if (this.checkFall(this.plats[i])) {
+						
+						// start falling
+						this.p.isJump = true;
+					}
+					else {
+						
+						// not falling
+						this.p.isJump = false;
+						break;
+					}
+				}
+			}
+		}
+
+		for (i = 0; i < this.walls.length; i++) {
+		
+			if (this.walls[i].y > Constants.H) {
+
+				this.walls[i].by -= 864;
+				this.walls[i].init(false);
+			}
+		}
+
+		for (i = 0; i < this.lev.length; i++) {
+		
+			if (this.lev[i].y > Constants.H) {
+
+				var row = this.lev[i].by,
+					set = this.sets[this.currLev][this.nxSet].split(''),
+					p = 0,
+					spr = false;
+				
+				for (var j = 0; j < this.lev.length; j++) {
+
+					var lv = this.lev[j];
+
+					// all pieces on the same row
+					if (lv.by == row) { 
+					
+						lv.by -= 864;
+						lv.y = this.cy + lv.by;
+						lv.isUsed = false;
+						lv.isSpr = false;
+
+						if (parseInt(set[p]) == 1) {
+
+							lv.isUsed = true;
+							lv.setScale(1 + (rnd() * 0.5));
+
+							// 5% chance of a spring
+							if (rnd() < 0.05 && !spr) {
+				
+								lv.isSpr = true;
+								spr = true;
+							}
+
+							// set shadow on the wall
+							lv.wall.init(true);
+						}
+
+						p++;
+					}
+				}
+
+				this.nxSet++;
+				if (this.nxSet > 4) this.nxSet = 0;
+			}
+		}
+
+		// drop platform when being stood on
+		for (i = 0; i < this.plats.length; i++) {
+
+			var pl = this.plats[i];
+
+			if (pl == this.p.currPlatform) {
+
+				pl.drop = 0;
+
+				// landed on a spring?
+				if (pl.isSpr) this.p.jump(1.4);
 			}
 			else {
 				
-				// not already falling?
-				if (this.p.dy == 0) {
-						
-					// falling off a platform?
-					for (i = 0; i < this.plats.length; i++) {
-					
-						if (this.checkFall(this.plats[i])) {
-							
-							// start falling
-							this.p.isJump = true;
-						}
-						else {
-							
-							// not falling
-							this.p.isJump = false;
-							break;
-						}
-					}
-				}
+				pl.drop = -4;
 			}
+		}
 
-			for (i = 0; i < this.walls.length; i++) {
-			
-				if (this.walls[i].y > Constants.H) {
+		this.updateLevel();
+		
+		// update
+		this.p.update();
 
-					this.walls[i].by -= 864;
-					this.walls[i].init(false);
-				}
-			}
+		var cy1 = cy1 - this.cy;
 
-			for (i = 0; i < this.lev.length; i++) {
-			
-				if (this.lev[i].y > Constants.H) {
+		// particles
+		this.lf.x = this.p.x;
+		this.lf.y = this.p.y;
+		this.lf.update(this.sp * -100, -cy1);
 
-					var row = this.lev[i].by,
-						layout = this.layouts[this.currLev][this.nextLayout].split(''),
-						p = 0,
-						spr = false;
-					
-					for (var j = 0; j < this.lev.length; j++) {
+		this.lf2.update(this.sp * -100, -cy1);
 
-						var lv = this.lev[j];
+		for (i = 0; i < this.beams.length; i++) {
 
-						// all pieces on the same row
-						if (lv.by == row) { 
-						
-							lv.by -= 864;
-							lv.y = this.cy + lv.by;
-							lv.isUsed = false;
-							lv.isSpr = false;
+			this.beams[i].x -= this.sp * 100;
 
-							if (parseInt(layout[p]) == 1) {
+			if (this.beams[i].x < -200) this.beams[i].x += 750; 
 
-								lv.isUsed = true;
-								lv.setScale(1 + (rnd() * 0.5));
+			this.beams[i].draw();
+		}
 
-								// 5% chance of a spring
-								if (rnd() < 0.05 && !spr) {
-					
-									lv.isSpr = true;
-									spr = true;
-								}
+		// score goes up every level climbed
+		while (this.co > 48) {
 
-								// set shadow on the wall
-								lv.wall.init(true);
-							}
+			this.score++;
+			this.hud.setScore(this.score);
+			this.music.setLev(this.score);
 
-							p++;
-						}
-					}
+			this.co -= 48;
+		}
 
-					this.nextLayout++;
-					if (this.nextLayout > 4) this.nextLayout = 0;
-				}
-			}
-
-			// drop platform when being stood on
-			for (i = 0; i < this.plats.length; i++) {
-
-				var pl = this.plats[i];
-
-				if (pl == this.p.currPlatform) {
-
-					pl.drop = 0;
-
-					// landed on a spring?
-					if (pl.isSpr) this.p.jump(1.4);
-				}
-				else {
-					
-					pl.drop = -4;
-				}
-			}
-
-			this.updateLevel();
-			
-			// update
-			this.p.update();
-
-			// particles
-			this.lf.x = this.p.x;
-			this.lf.y = this.p.y;
-			this.lf.update(this.cy);
-
-			for (i = 0; i < this.beams.length; i++) {
-
-				this.beams[i].x -= this.sp * 100;
-
-				if (this.beams[i].x < -200) this.beams[i].x += 750; 
-
-				this.beams[i].draw();
-			}
-
-			// score goes up every level climbed
-			while (this.co > 48) {
-
-				this.score++;
-				this.hud.setScore(this.score);
-
-				this.co -= 48;
-			}
-
-			if (this.score > hiscore) hiscore = this.score;
-			
-			this.hud.draw();
-		//}
+		if (this.score > hiscore) hiscore = this.score;
+		
+		this.hud.draw();
 	},
 	
 	cleanUp : function() {
